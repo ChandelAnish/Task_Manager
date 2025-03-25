@@ -4,20 +4,31 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import TaskCard from "@/component/TaskCard";
-import { getTasks, createTask, updateTask, deleteTask, SerializedTask } from "@/lib/actions";
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  SerializedTask,
+} from "@/lib/actions";
+import LoadingSpinners from "@/component/LoadingSpinners";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<SerializedTask[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<SerializedTask | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
+      setLoading(true);
       const result = await getTasks();
       if (result.success) {
         // console.log(result.tasks)
         setTasks(result.tasks as SerializedTask[]);
+        setLoading(false);
       }
+      setLoading(false);
     };
     fetchTasks();
   }, []);
@@ -53,8 +64,8 @@ export default function TasksPage() {
     const result = await deleteTask(id);
     if (!result.success) {
       alert(result.error);
-    }else{
-      setTasks(prev => prev.filter(item => item.id != id))
+    } else {
+      setTasks((prev) => prev.filter((item) => item.id != id));
     }
   };
 
@@ -75,18 +86,22 @@ export default function TasksPage() {
             <Plus size={24} />
           </motion.button>
         </div>
-
-        <AnimatePresence>
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id as string}
-              task={task}
-              onEdit={handleEdit}
-              handleDelete={handleDelete}
-            />
-          ))}
-        </AnimatePresence>
-
+        {loading ? (
+          <LoadingSpinners/>
+        ) : (
+          <div>
+            <AnimatePresence>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id as string}
+                  task={task}
+                  onEdit={handleEdit}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
         {isModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
